@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>日历</title>
+	<style>
+		.calendar{
+			width: 500px;
+			margin: 50px auto;
+			padding: 50px;
+			text-align: center;
+		}
+		.showData,.c_table,table{
+			width: 400px;
+			margin: 10px auto;
+		}
+		.showData{
+			height: 30px;
+		}
+		.c_table{
+			display: none;
+		}
+		.c_table td.active{
+			background: #33f3d5;
+		}
+		.clearfix{
+			overflow: hidden;
+			padding: 5px 10px;
+		}
+		.clearfix input{
+			width: 40px;
+		}
+		.pre_y,.pre_m{
+			float: left;
+			margin-right: 10px;
+		}
+		.next_y,.next_m{
+			float: right;
+			margin-left: 10px;
+		}
+		.pre{
+			color: #aaa;
+		}
+		.current{
+			background: #fe781e;
+			color: #fff;
+		}
+		.next{
+			color: #fe781e;
+		}
+	</style>
+	<script src="jquery-3.1.1.min.js"></script>
+	<script>
+		$(document).ready(function(){
+			//显示日历
+			$('.showData').click(function(){
+				$('.c_table').show();
+			})
+			//画当前日历
+			function showNow(y,m){
+				$('tbody').empty();
+				var now = new Date();
+				var year = y || now.getFullYear();
+				var month = m-1 || now.getMonth();
+				var date = now.getDate();
+				//填充 年 和 月
+				$('.show_y').val(year);
+				$('.show_m').val(m || now.getMonth() + 1);
+				//填充日期
+				showDate(year,month,date);
+				pick();
+			}
+			//根据传入值重新画日历
+			function showDate(y,m,d){
+				//判断是否为闰年
+				function is_leap(year) { 
+				   return (year%100 == 0 ? res = (year%400 == 0?1:0) : res = (year%4 == 0?1:0));
+				}
+	
+				var newDay = new Date();
+				newDay.setFullYear(y,m,d);
+				var newYear = newDay.getFullYear(); //年份
+				var newMonth = newDay.getMonth(); //月份
+				var newDate = newDay.getDate(); //今日日期
+				var n1str = new Date(newYear,newMonth,1); //当月第一天 
+
+				var firstday = n1str.getDay(); //当月第一天星期几
+
+				var m_days = new Array(31,28+is_leap(newYear),31,30,31,30,31,31,30,31,30,31); //各月份的总天数
+
+				var tr_str = Math.ceil((m_days[newMonth] + firstday)/7); //表格所需要行数
+				for(i = 0;i < tr_str;i ++) { //表格的行
+				   var $tr = $("<tr></tr>");
+				   for(k = 0;k < 7;k ++) { //表格每行的单元格
+				      idx = i * 7 + k; //单元格自然序列号
+				      date_str = idx - firstday + 1; //计算日期
+				      (date_str <=0 || date_str > m_days[newMonth]) ? date_str="&nbsp;" : date_str=idx-firstday + 1; //过滤无效日期（小于等于零的、大于月总天数的）
+				      //打印日期：今天底色为红
+				      var $td ;
+				      if(date_str < newDate){
+				      	$td = $("<td class='pre'>" + date_str + "</td>");
+				      }else if(date_str == newDate){
+				      	$td = $("<td class='current'>" + date_str + "</td>");
+				      }else{
+				      	$td = $("<td class='next'>" + date_str + "</td>");
+				      }
+				      /*date_str==date ? $td = $("<td bgcolor='red'>" + date_str + "</td>") : $td = $("<td>" + date_str + "</td>");*/
+				      $tr.append($td);
+				   }
+					$('tbody').append($tr);
+				   
+				}
+			}
+			//点击显示日期
+			function pick(){
+				$('td').click(function(){
+					$('.showData').val($('.show_y').val()+ "年" + $('.show_m').val() + "月" + $(this).html() +"日");
+					//$('.c_table').hide();
+				});
+			}
+			//点击切换月份
+			$('.pre_m').click(function(){
+				$flag = 1;
+				changeM($flag);
+				return $flag;
+			})
+			$('.next_m').click(function(){
+				$flag = 0;
+				changeM($flag);
+				return $flag;
+			})
+			//点击切换月份
+			function changeM(obj){
+				$newM = parseInt($('.show_m').val());
+				$newY = parseInt($('.show_y').val());
+				console.log($newM);
+				if(obj == 1){
+					$newM --;
+				}else{
+					$newM ++;
+				}
+				if($newM < 1){
+					$newM = 12;
+					$newY --;
+				}else if($newM > 12){
+					$newM = 1;
+					$newY ++;
+				}
+
+				$('.show_m').val($newM);
+				$('.show_y').val($newY);
+				console.log($newM);
+
+				showNow($newY,$newM);
+			}
+
+			//点击切换年份
+			$('.pre_y').click(function(){
+				$flag = 1;
+				changeY($flag);
+				return $flag;
+			})
+			$('.next_y').click(function(){
+				$flag = 0;
+				changeY($flag);
+				return $flag;
+			})
+
+			function changeY(n){
+				$newY = parseInt($('.show_y').val());
+
+				if(n == 1){
+					$newY --;
+				}else{
+					$newY ++;
+				}
+
+				if(n < 1900){
+					newY = 1900;
+				}else if(n > 2099){
+					newY = 2099;
+				}
+
+				$('.show_y').val($newY);
+
+				showNow($newY);
+			}
+
+			$('.show_y').blur(function(){
+				$newY = parseInt($('.show_y').val());
+				showNow($newY);
+			});
+			$('.show_m').blur(function(){
+				$newY = parseInt($('.show_y').val());
+				$newM = parseInt($('.show_m').val());
+				showNow($newY,$newM);
+			})
+
+			
+			showNow();
+		})
+	</script>
+</head>
+<body>
+	<div class="calendar" id="J_calendar">
+		<input type="text" class="showData" value="点击选择日期">
+		<div class="c_table">
+			<div class="clearfix">
+				<span class="pre_y">上一年</span>
+				<span class="pre_m">上个月</span>
+				<input class="show_y"></input>年
+				<input class="show_m"></input>月
+				<span class="next_y">下一年</span>
+				<span class="next_m">下个月</span>
+			</div>
+			<table>
+				<thead>
+					<tr>
+                        <th>日</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th><th>六</th>
+                    </tr>
+				</thead>
+				<tbody>
+                  
+                </tbody>
+			</table>
+		</div>
+	</div>
+</body>
+</html>
